@@ -1,0 +1,8 @@
+FROM itzg/minecraft-server
+
+# Устанавливаем параметры сервера
+ENV EULA=TRUE
+ENV MEMORY=1G
+
+# Порт, используемый Minecraft-сервером
+EXPOSE 25565

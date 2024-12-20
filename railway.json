@@ -1,0 +1,12 @@
+{
+  "build": {
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "startCommand": "java -Xmx1G -Xms1G -jar server.jar nogui"
+  },
+  "envs": {
+    "EULA": "TRUE",
+    "MEMORY": "1G"
+  }
+}

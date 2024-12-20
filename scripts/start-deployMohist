@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# shellcheck source=start-utils
+. "${SCRIPTS:-$(dirname "$0")}/start-utils"
+set -o pipefail
+set -e
+isDebugging && set -x
+
+resolveVersion
+: "${MOHIST_BUILD:=lastSuccessfulBuild}"
+
+mohistBaseUrl=https://ci.codemc.io/job/MohistMC/
+mohistJobs=${mohistBaseUrl}job/
+mohistJob=${mohistJobs}Mohist-${VERSION}/
+
+function logMohistAvailableVerisons(){
+  logError "       check ${mohistBaseUrl} for available versions"
+  logError "       and set VERSION accordingly"
+}
+
+if ! get --exists "${mohistJob}"; then
+  logError "Mohist builds do not exist for ${VERSION}"
+  logMohistAvailableVerisons
+  exit 1
+fi
+
+buildRelPath=$(
+  get --json-path '$.artifacts[0].relativePath' "${mohistJob}${MOHIST_BUILD}/api/json"
+)
+
+baseName=$(basename "${buildRelPath}")
+if [[ ${baseName} != *-server.jar* ]]; then
+  logError "Mohist build for ${VERSION} is not a valid server jar, found ${baseName}"
+  logMohistAvailableVerisons
+  exit 1
+fi
+
+export SERVER="/data/${baseName}"
+
+if [ ! -f "${SERVER}" ]; then
+  log "Downloading ${baseName}"
+  get -o "${SERVER}" "${mohistJob}${MOHIST_BUILD}/artifact/${buildRelPath}"
+fi
+
+export FAMILY=HYBRID
+
+exec "${SCRIPTS:-/}start-spiget" "$@"
